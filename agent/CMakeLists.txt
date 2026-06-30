@@ -18,14 +18,25 @@ set(YAML_CPP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "" FORCE)
 FetchContent_MakeAvailable(yaml-cpp)
 
+# nlohmann_json: Thu vien JSON
+FetchContent_Declare(json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG v3.11.3)
+FetchContent_MakeAvailable(json)
+
+# libcurl: Thu vien goi HTTP Request
+find_package(CURL REQUIRED)
+
 # Danh sach file source
 set(AGENT_SOURCES
     src/main.cpp
     src/logger.cpp
+    src/config.cpp
     src/event.cpp
-    src/config.cpp)
+    src/event_serializer.cpp
+    src/network_client.cpp)
 
 # Build chuong trinh
 add_executable(vdt-agent ${AGENT_SOURCES})
 target_include_directories(vdt-agent PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(vdt-agent PRIVATE yaml-cpp::yaml-cpp pthread)
+target_link_libraries(vdt-agent PRIVATE yaml-cpp::yaml-cpp nlohmann_json::nlohmann_json CURL::libcurl)
