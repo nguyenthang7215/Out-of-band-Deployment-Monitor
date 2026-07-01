@@ -1,19 +1,25 @@
 #pragma once 
 
 #include <string>
+#include <thread>
+#include <atomic>
+#include "event_queue.h"
 
 class NetworkClient { 
 public: 
-    static NetworkClient& instance();
-    NetworkClient(const NetworkClient&) = delete;
-    NetworkClient& operator=(const NetworkClient&) = delete;
+    NetworkClient(const std::string& central_url, EventQueue& queue);
     ~NetworkClient();
 
-    void init(const std::string& central_url);
-    bool send_event(const std::string& json_data);
-    bool send_event_with_retry(const std::string& json_data, int max_retries = 3);
+    void start();
+    void stop();
 
 private: 
-    NetworkClient() = default;
+    bool send_event_with_retry(const std::string& json_data, int max_retries = 3);
+    bool send_event(const std::string& json_data);
+    void sender_loop();
+
     std::string central_url;
+    EventQueue& event_queue;
+    std::thread sender_thread;
+    std::atomic<bool> running{false};
 };
