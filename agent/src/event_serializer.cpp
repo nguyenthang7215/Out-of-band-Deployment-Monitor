@@ -13,7 +13,7 @@ std::string EventSerializer::to_json(const MonitorEvent& event) {
 
     json_data["audit_data"]["file_path"] = event.audit_data.file_path;
     json_data["audit_data"]["file_name"] = event.audit_data.file_name;
-    json_data["audit_data"]["event_type"] = event.audit_data.event_type;
+    json_data["audit_data"]["event_type"] = EventHelper::event_type_to_string(event.audit_data.event_type);
     json_data["audit_data"]["username"] = event.audit_data.username;
     json_data["audit_data"]["uid"] = event.audit_data.uid;
     json_data["audit_data"]["auid"] = event.audit_data.auid;
