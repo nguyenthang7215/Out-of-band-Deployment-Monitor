@@ -1,0 +1,16 @@
+[Unit]
+Description=VDT Out-of-band Deployment Monitor Agent
+After=network.target auditd.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/vdt-agent
+Restart=on-failure
+RestartSec=5
+# Ghi log cua systemd ra syslog (co the xem bang journalctl -u vdt-agent)
+StandardOutput=syslog
+StandardError=syslog
+
+[Install]
+WantedBy=multi-user.target
