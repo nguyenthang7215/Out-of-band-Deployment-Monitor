@@ -34,7 +34,8 @@ set(AGENT_SOURCES
     src/config.cpp
     src/event.cpp
     src/event_serializer.cpp
-    src/network_client.cpp)
+    src/network_client.cpp
+    src/event_queue.cpp)
 
 # Build chuong trinh
 add_executable(vdt-agent ${AGENT_SOURCES})
