@@ -4,6 +4,10 @@
 #include <sstream>
 #include <fstream>
 #include <unistd.h>
+#include <cstring>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 MonitorEvent EventHelper::to_monitor_event(
     const AuditEvent& audit_event,
@@ -45,9 +49,29 @@ std::string EventHelper::get_hostname() {
 }
 
 std::string EventHelper::get_server_ip() {
-    // Tam thoi tra ve localhost
-    // Se cap nhat IP that o giai doan network
-    return "127.0.0.1";
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0) {
+        return "127.0.0.1";
+    }
+
+    struct sockaddr_in serv;
+    memset(&serv, 0, sizeof(serv));
+    serv.sin_family = AF_INET;
+    serv.sin_addr.s_addr = inet_addr("8.8.8.8");
+    serv.sin_port = htons(53);
+
+    if (connect(sock, (const struct sockaddr*)&serv, sizeof(serv)) < 0) {
+        close(sock);
+        return "127.0.0.1";
+    }
+
+    struct sockaddr_in name;
+    socklen_t namelen = sizeof(name);
+    getsockname(sock, (struct sockaddr*)&name, &namelen);
+
+    std::string ip = inet_ntoa(name.sin_addr);
+    close(sock);
+    return ip;
 }
 
 std::string EventHelper::get_iso8601_time() {
