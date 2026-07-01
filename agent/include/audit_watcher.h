@@ -34,6 +34,7 @@ private:
         uint32_t auid = 0;
         int pid = -1;
         uint64_t timestamp = 0;
+        std::string timestamp_iso;
         std::vector<FileRecord> files;
     };
 

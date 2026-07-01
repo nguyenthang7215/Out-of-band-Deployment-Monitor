@@ -26,7 +26,7 @@ void setup_audit_rule() {
         LOG_INFO("Thêm rule audit: " + cmd);
         int ret = system(cmd.c_str());
         if (ret != 0) {
-            LOG_INFO("Cảnh báo: Không thể thêm rule audit cho " + path + " (Yêu cầu quyền root)");
+            LOG_WARN("Không thể thêm rule audit cho " + path + " (Yêu cầu quyền root, hoặc rule đã tồn tại)");
         }
     }
 }

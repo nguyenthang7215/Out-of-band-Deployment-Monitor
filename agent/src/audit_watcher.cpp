@@ -171,6 +171,13 @@ void AuditWatcher::process_line(const std::string& line) {
                     millis = std::stoull(event_id.substr(dot_pos + 1, colon_pos - dot_pos - 1));
                 }
                 pending_events[event_id].timestamp = (seconds * 1000) + millis;
+                
+                std::time_t time_sec = static_cast<std::time_t>(seconds);
+                std::tm tm_buf;
+                gmtime_r(&time_sec, &tm_buf);
+                char time_str[64];
+                std::strftime(time_str, sizeof(time_str), "%Y-%m-%dT%H:%M:%S", &tm_buf);
+                pending_events[event_id].timestamp_iso = std::string(time_str) + "." + std::to_string(millis) + "Z";
             } catch(...) {}
         }
 
@@ -225,7 +232,7 @@ void AuditWatcher::flush_event(const std::string& event_id) {
                 ev.pid = pe.pid;
                 ev.username = username;
                 ev.timestamp = pe.timestamp;
-                
+                ev.timestamp_iso = pe.timestamp_iso;
                 ev.event_type = determine_event_type(pe.syscall_num, file_record.nametype);
                 
                 callback(ev);
