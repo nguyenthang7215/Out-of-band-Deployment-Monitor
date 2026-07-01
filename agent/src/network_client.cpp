@@ -25,6 +25,16 @@ void NetworkClient::start() {
 
 void NetworkClient::stop() {
     if (running) {
+        LOG_INFO("Đang gửi nốt các sự kiện còn tồn đọng trong hàng đợi...");
+        int flush_count = event_queue.size();
+        while (flush_count-- > 0 && !event_queue.empty()) {
+            auto event_opt = event_queue.pop(100);
+            if (event_opt) {
+                std::string json_data = EventSerializer::to_json(*event_opt);
+                send_event(json_data); // Gửi trực tiếp 1 lần để thoát nhanh
+            }
+        }
+        
         running = false;
         if (sender_thread.joinable()) {
             sender_thread.join();

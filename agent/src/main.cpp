@@ -80,7 +80,9 @@ int main() {
             server_ip
         );
 
-        event_queue.push(monitor_event);
+        if (!event_queue.push(monitor_event)) {
+            LOG_WARN("Hàng đợi (Queue) đã đầy! Sự kiện bị hủy bỏ (Drop event): " + monitor_event.event_id);
+        }
     });
 
     audit_watcher.start("/var/log/audit/audit.log");
