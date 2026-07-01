@@ -17,7 +17,6 @@ public:
     ~AuditWatcher();
 
     void set_callback(AuditEventCallback cb);
-    void set_audit_key(const std::string& key) { audit_key = key; }
     void start(const std::string& log_file_path = "/var/log/audit/audit.log");
     void stop();
 
@@ -51,7 +50,6 @@ private:
 
     std::unordered_map<std::string, PendingEvent> pending_events;
     std::string current_event_id;
-    std::string audit_key = "vdt_config_change";
 
     std::thread watcher_thread;
     std::atomic<bool> running{false};

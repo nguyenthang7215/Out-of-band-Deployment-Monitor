@@ -123,11 +123,6 @@ void AuditWatcher::process_line(const std::string& line) {
     }
 
     if (line.find("type=SYSCALL") != std::string::npos) {
-        std::string key = extract_field(line, "key=");
-        if (!audit_key.empty() && key != audit_key) {
-            return;
-        }
-
         std::string ses_str = extract_field(line, "ses=");
         std::string exe = extract_field(line, "exe=");
         std::string syscall = extract_field(line, "syscall=");
