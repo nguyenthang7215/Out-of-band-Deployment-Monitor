@@ -28,7 +28,7 @@ class ElasticsearchClient:
         # Them cac field quan trong vao event
         violation_doc = event.copy()
         violation_doc["violation_time"] = datetime.now(timezone.utc).isoformat()
-        violation_doc["severity"] = "HIGH"
+        violation_doc["severity"] = event.get("severity", "HIGH")
 
         try:
             # Ghi vao ES. Neu index chua ton tai, ES se tu dong tao (theo cau hinh mac dinh)
