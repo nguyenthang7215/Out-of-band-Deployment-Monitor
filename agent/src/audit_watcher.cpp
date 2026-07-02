@@ -30,7 +30,7 @@ void AuditWatcher::stop() {
     }
 }
 
-std::string AuditWatcher::extract_event_id(const std::string& line) const {
+std::string AuditWatcher::extract_audit_serial(const std::string& line) const {
     // vd: msg=audit(1623456789.123:456):
     std::size_t start_pos = line.find("msg=audit(");
     if (start_pos == std::string::npos) {
@@ -110,16 +110,16 @@ void AuditWatcher::process_line(const std::string& line) {
     // Loc IP
     session_tracker.process_line(line);
 
-    std::string event_id = extract_event_id(line);
-    if (event_id.empty()) {
+    std::string audit_serial = extract_audit_serial(line);
+    if (audit_serial.empty()) {
         return;
     }
 
-    if (current_event_id != event_id) {
-        if (!current_event_id.empty()) {
-            flush_event(current_event_id);
+    if (current_audit_serial != audit_serial) {
+        if (!current_audit_serial.empty()) {
+            flush_event(current_audit_serial);
         }
-        current_event_id = event_id;
+        current_audit_serial = audit_serial;
     }
 
     if (line.find("type=SYSCALL") != std::string::npos) {
@@ -135,57 +135,57 @@ void AuditWatcher::process_line(const std::string& line) {
                 unsigned long ses_raw = std::stoul(ses_str);
 
                 if (ses_raw == 4294967295UL) { // Bo qua internal session
-                    pending_events[event_id].session_id = -1;
+                    pending_events[audit_serial].session_id = -1;
                 } else {
-                    pending_events[event_id].session_id = static_cast<int>(ses_raw);
+                    pending_events[audit_serial].session_id = static_cast<int>(ses_raw);
                 }
             } catch (...) {}
         }
 
         if (!uid_str.empty()) { 
             try { 
-                pending_events[event_id].uid = std::stoul(uid_str); 
+                pending_events[audit_serial].uid = std::stoul(uid_str); 
             } catch(...) {} 
         }
 
         if (!auid_str.empty()) { 
             try { 
-                pending_events[event_id].auid = std::stoul(auid_str); 
+                pending_events[audit_serial].auid = std::stoul(auid_str); 
             } catch(...) {} 
         }
 
         if (!pid_str.empty()) { 
             try { 
-                pending_events[event_id].pid = std::stoi(pid_str); 
+                pending_events[audit_serial].pid = std::stoi(pid_str); 
             } catch(...) {} 
         }
         
         // Extract timestamp
-        std::size_t dot_pos = event_id.find('.');
-        std::size_t colon_pos = event_id.find(':');
+        std::size_t dot_pos = audit_serial.find('.');
+        std::size_t colon_pos = audit_serial.find(':');
         if (dot_pos != std::string::npos) {
             try {
-                uint64_t seconds = std::stoull(event_id.substr(0, dot_pos));
+                uint64_t seconds = std::stoull(audit_serial.substr(0, dot_pos));
                 uint64_t millis = 0;
                 if (colon_pos != std::string::npos && colon_pos > dot_pos) {
-                    millis = std::stoull(event_id.substr(dot_pos + 1, colon_pos - dot_pos - 1));
+                    millis = std::stoull(audit_serial.substr(dot_pos + 1, colon_pos - dot_pos - 1));
                 }
-                pending_events[event_id].timestamp = (seconds * 1000) + millis;
+                pending_events[audit_serial].timestamp = (seconds * 1000) + millis;
                 
                 std::time_t time_sec = static_cast<std::time_t>(seconds);
                 std::tm tm_buf;
                 gmtime_r(&time_sec, &tm_buf);
                 char time_str[64];
                 std::strftime(time_str, sizeof(time_str), "%Y-%m-%dT%H:%M:%S", &tm_buf);
-                pending_events[event_id].timestamp_iso = std::string(time_str) + "." + std::to_string(millis) + "Z";
+                pending_events[audit_serial].timestamp_iso = std::string(time_str) + "." + std::to_string(millis) + "Z";
             } catch(...) {}
         }
 
         if (!exe.empty()) {
-            pending_events[event_id].exe = exe;
+            pending_events[audit_serial].exe = exe;
         }
         if (!syscall.empty()) {
-            pending_events[event_id].syscall_num = syscall;
+            pending_events[audit_serial].syscall_num = syscall;
         }
     } 
     else if (line.find("type=PATH") != std::string::npos) {
@@ -193,13 +193,13 @@ void AuditWatcher::process_line(const std::string& line) {
         std::string nametype = extract_field(line, "nametype=");
 
         if (!name.empty() && name != "(null)") {
-            pending_events[event_id].files.push_back({name, nametype});
+            pending_events[audit_serial].files.push_back({name, nametype});
         }
     }
 }
 
-void AuditWatcher::flush_event(const std::string& event_id) {
-    auto it = pending_events.find(event_id);
+void AuditWatcher::flush_event(const std::string& audit_serial) {
+    auto it = pending_events.find(audit_serial);
     if (it != pending_events.end()) {
         const PendingEvent& pe = it->second;
         
@@ -220,20 +220,20 @@ void AuditWatcher::flush_event(const std::string& event_id) {
             
             for (const auto& file_record : pe.files) {
                 AuditEvent ev;
-                ev.audit_serial = event_id;
                 ev.file_path = file_record.path;
                 ev.file_name = file_record.path.substr(file_record.path.find_last_of('/') + 1);
+                ev.event_type = determine_event_type(pe.syscall_num, file_record.nametype);
+                ev.username = username;
+                ev.uid = pe.uid;
+                ev.auid = pe.auid;
+                ev.pid = pe.pid;
                 ev.process_name = pe.exe;
                 ev.exe_path = pe.exe;
                 ev.session_id = pe.session_id;
                 ev.source_ip = source_ip;
-                ev.uid = pe.uid;
-                ev.auid = pe.auid;
-                ev.pid = pe.pid;
-                ev.username = username;
                 ev.timestamp = pe.timestamp;
                 ev.timestamp_iso = pe.timestamp_iso;
-                ev.event_type = determine_event_type(pe.syscall_num, file_record.nametype);
+                ev.audit_serial = audit_serial;
                 
                 callback(ev);
             }
@@ -283,8 +283,8 @@ void AuditWatcher::tail_loop(std::string log_file_path) {
         }
     }
     
-    if (!current_event_id.empty()) {
-        flush_event(current_event_id);
-        current_event_id.clear();
+    if (!current_audit_serial.empty()) {
+        flush_event(current_audit_serial);
+        current_audit_serial.clear();
     }
 }
