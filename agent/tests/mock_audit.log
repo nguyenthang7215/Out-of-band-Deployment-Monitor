@@ -1,0 +1,5 @@
+type=PROCTITLE msg=audit(1782917639.228:454): proctitle=746F756368002F6F70742F6F6F622D6D6F6E69746F722F6861636B65642E747874
+type=PATH msg=audit(1782917639.228:454): item=1 name="/opt/oob-monitor/hacked.txt" inode=131498 dev=08:02 mode=0100644 ouid=1000 ogid=1000 rdev=00:00 nametype=CREATE cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=PATH msg=audit(1782917639.228:454): item=0 name="/opt/oob-monitor" inode=131464 dev=08:02 mode=040755 ouid=1000 ogid=1000 rdev=00:00 nametype=PARENT cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=CWD msg=audit(1782917639.228:454): cwd="/home/nguyenthang7215/Out-of-band-Deployment-Monitor/agent/build"
+type=SYSCALL msg=audit(1782917639.228:454): arch=c000003e syscall=257 success=yes exit=3 a0=ffffff9c a1=7fffb741cf33 a2=941 a3=1b6 items=2 ppid=844 pid=9231 auid=1000 uid=1000 gid=1000 euid=1000 suid=1000 fsuid=1000 egid=1000 sgid=1000 fsgid=1000 tty=pts0 ses=3 comm="touch" exe="/usr/bin/touch" subj=unconfined key="oob_monitor"
