@@ -40,17 +40,17 @@ private:
 
     void tail_loop(std::string log_file_path);
     void process_line(const std::string& line);
-    void flush_event(const std::string& event_id);
+    void flush_event(const std::string& audit_serial);
     
     EventType determine_event_type(const std::string& syscall_num, const std::string& nametype) const;
-    std::string extract_event_id(const std::string& line) const;
+    std::string extract_audit_serial(const std::string& line) const;
     std::string extract_field(const std::string& line, const std::string& key) const;
 
     SessionTracker& session_tracker;
     AuditEventCallback callback;
 
     std::unordered_map<std::string, PendingEvent> pending_events;
-    std::string current_event_id;
+    std::string current_audit_serial;
 
     std::thread watcher_thread;
     std::atomic<bool> running{false};
