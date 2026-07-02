@@ -50,19 +50,17 @@ class ReconciliationEngine:
         else:
             is_building = True
 
-        if is_trusted_ip and is_building:
-            logger.info(f"Hợp lệ: IP {source_ip} là trusted IP VÀ Jenkins đang chạy deploy. Thao tác trên {file_path} được cho phép.")
+        if is_building:
+            logger.info(f"Hợp lệ: Jenkins đang chạy deploy. Thao tác trên {file_path} (từ IP {source_ip}) được cho phép.")
             return
 
-        if is_trusted_ip and not is_building:
-            logger.warning(f"VI PHẠM: IP {source_ip} là trusted IP NHƯNG Jenkins không chạy deploy! Hành vi cấu hình thủ công trái phép.")
-            event["severity"] = "HIGH"
-        elif not is_trusted_ip and is_building:
-            logger.error(f"VI PHẠM: IP {source_ip} KHÔNG trusted đang cố thọc tay vào lúc Jenkins đang chạy!")
-            event["severity"] = "HIGH"
+        # Neu khong building thi deu la vi pham
+        if is_trusted_ip:
+            logger.warning(f"VI PHẠM: IP {source_ip} (Trusted IP) cấu hình thủ công trái phép khi Jenkins không chạy deploy!")
         else:
-            logger.error(f"VI PHẠM NGHIÊM TRỌNG: IP {source_ip} KHÔNG trusted VÀ Jenkins không chạy deploy!")
-            event["severity"] = "HIGH"
+            logger.error(f"VI PHẠM NGHIÊM TRỌNG: IP {source_ip} KHÔNG trusted đang cấu hình thủ công trái phép khi Jenkins không chạy deploy!")
+        
+        event["severity"] = "HIGH"
         
         self.es_client.send_violation(event)
         self.total_violations += 1

@@ -45,9 +45,15 @@ int main() {
         }
     }
 
+    std::string config_level = Config::instance().get_log_level();
+    LogLevel level = LogLevel::INFO;
+    if (config_level == "DEBUG") level = LogLevel::DEBUG;
+    else if (config_level == "WARN") level = LogLevel::WARN;
+    else if (config_level == "ERROR") level = LogLevel::ERROR;
+
     Logger::instance().init(
         Config::instance().get_log_path(),
-        LogLevel::INFO
+        level
     );
 
     LOG_INFO("VDT Out-of-band Monitor Agent bắt đầu khởi động");

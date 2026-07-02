@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, BackgroundTasks
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 import logging
@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.post("/events")
-async def receive_event(request: Request):
+async def receive_event(request: Request, background_tasks: BackgroundTasks):
     engine = request.app.state.engine
     try:
         raw_data = await request.json()
@@ -21,9 +21,10 @@ async def receive_event(request: Request):
         if not engine:
             return JSONResponse(status_code=503, content={"status": "error", "message": "Service not ready"})
         
-        engine.process(validated_event.model_dump())
+        # Fire-and-forget: Day vao queue ngam de xu li
+        background_tasks.add_task(engine.process, validated_event.model_dump())
         
-        return {"status": "success", "message": "Event processed"}
+        return {"status": "success", "message": "Event queued for processing"}
         
     except ValidationError as e:
         logger.error(f"Data nhận được không đúng định dạng (thiếu fields): {e}")

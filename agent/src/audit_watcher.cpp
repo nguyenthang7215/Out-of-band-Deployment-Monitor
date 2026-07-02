@@ -4,6 +4,7 @@
 #include <iostream>
 #include <pwd.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 
 AuditWatcher::AuditWatcher(SessionTracker& tracker) : session_tracker(tracker) {}
 
@@ -244,18 +245,29 @@ void AuditWatcher::flush_event(const std::string& audit_serial) {
 
 void AuditWatcher::tail_loop(std::string log_file_path) {
     std::ifstream file(log_file_path);
+    ino_t current_inode = 0;
     
     if (file.is_open()) {
         // Dua con tro ve cuoi file, chi doc log sinh ra tu thoi diem khoi dong
         file.seekg(0, std::ios::end);
+        struct stat st;
+        if (stat(log_file_path.c_str(), &st) == 0) {
+            current_inode = st.st_ino;
+        }
     }
 
     std::string line;
+    auto last_event_time = std::chrono::steady_clock::now();
+    
     while (running) {
         if (!file.is_open()) {
             file.open(log_file_path);
             if (file.is_open()) {
                 file.seekg(0, std::ios::end);
+                struct stat st;
+                if (stat(log_file_path.c_str(), &st) == 0) {
+                    current_inode = st.st_ino;
+                }
             } else {
                 std::this_thread::sleep_for(std::chrono::seconds(1));
                 continue;
@@ -264,22 +276,28 @@ void AuditWatcher::tail_loop(std::string log_file_path) {
 
         if (std::getline(file, line)) {
             process_line(line);
+            last_event_time = std::chrono::steady_clock::now();
         } else {
             file.clear();
             
-            // Kiem tra log rotation (truncate)
-            std::streampos current_pos = file.tellg();
-            file.seekg(0, std::ios::end);
-            std::streampos end_pos = file.tellg();
-            
-            if (end_pos < current_pos) {
-                // File da bi truncate (logrotate)
-                file.seekg(0, std::ios::beg);
-            } else {
-                // File van the, tra lai vi tri cu
-                file.seekg(current_pos);
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            auto now = std::chrono::steady_clock::now();
+            if (!current_audit_serial.empty() && 
+                std::chrono::duration_cast<std::chrono::seconds>(now - last_event_time).count() >= 1) {
+                flush_event(current_audit_serial);
+                current_audit_serial.clear();
             }
+            
+            // Kiem tra log rotation (rename hoac truncate)
+            struct stat st;
+            if (stat(log_file_path.c_str(), &st) == 0) {
+                std::streampos current_pos = file.tellg();
+                if (st.st_ino != current_inode || static_cast<std::streampos>(st.st_size) < current_pos) {
+                    // File bi doi ten (rotate) hoac bi truncate
+                    file.close();
+                    continue; // Quay lai dau vong lap de mo lai
+                }
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     }
     
