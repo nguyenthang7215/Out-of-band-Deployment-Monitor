@@ -2,7 +2,7 @@ trusted_ips:
   - "10.0.0.5"
 
 jenkins:
-  base_url: "http://10.0.0.5:8080"
+  base_url: "http://jenkins:8080"
   username: "admin"
   api_token: "your-token-here"
   job_name: "deploy-myapp"
