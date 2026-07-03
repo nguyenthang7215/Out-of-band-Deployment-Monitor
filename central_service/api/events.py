@@ -39,3 +39,20 @@ def get_stats(request: Request):
     if engine:
         return engine.get_stats()
     return {"total_events": 0, "total_violations": 0}
+
+@router.post("/alerts")
+async def receive_grafana_alert(request: Request):
+    try:
+        alert_data = await request.json()
+        alert_title = alert_data.get('title', 'Unknown Alert')
+        
+        logger.warning(f"[GRAFANA ALERT] Tiếp nhận cảnh báo từ Grafana | Tiêu đề: {alert_title}")
+        
+        return {"status": "success", "message": "Đã ghi nhận cảnh báo"}
+        
+    except Exception as e:
+        logger.error(f"Lỗi xử lý Grafana Webhook: {str(e)}")
+        return JSONResponse(
+            status_code=500, 
+            content={"status": "error", "message": "Lỗi máy chủ nội bộ"}
+        )
