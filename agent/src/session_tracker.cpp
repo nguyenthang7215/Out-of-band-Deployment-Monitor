@@ -52,13 +52,17 @@ void SessionTracker::parse_login_line(const std::string& line) {
         return;
     }
 
+    std::string final_addr = addr;
+    if (addr == "?") {
+        final_addr = "unknown";
+    }
+
     std::lock_guard<std::mutex> lock(mtx);
-    session_map[session_id] = addr;
+    session_map[session_id] = final_addr;
 }
 
 bool SessionTracker::is_valid_ip(const std::string& addr) const {
-    // IP local hoac IP rong
-    if (addr == "?" || addr == "127.0.0.1" || addr == "::1") {
+    if (addr == "127.0.0.1" || addr == "::1") {
         return false;
     }
     return true;

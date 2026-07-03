@@ -22,7 +22,7 @@ void signal_handler(int signum) {
 void setup_audit_rule() {
     auto paths = Config::instance().get_watch_paths();
     for (const auto& path : paths) {
-        std::string cmd = "auditctl -w " + path + " -p wa";
+        std::string cmd = "auditctl -w " + path + " -p wa -k vdt_monitor";
         LOG_INFO("Thêm rule audit: " + cmd);
         int ret = system(cmd.c_str());
         if (ret != 0) {
