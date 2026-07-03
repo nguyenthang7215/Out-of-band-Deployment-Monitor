@@ -15,13 +15,19 @@ services:
     networks:
       - vdt_network
 
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.11.1
-    container_name: vdt_kibana
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: vdt_grafana
     ports:
-      - "5601:5601"
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/provisioning/alerting:/etc/grafana/provisioning/alerting
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
     depends_on:
       - elasticsearch
     networks:
