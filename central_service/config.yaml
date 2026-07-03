@@ -14,8 +14,8 @@ elasticsearch:
   index: "oob-monitor-violations"
 
 remediation:
-  enabled: false
-  ansible_url: "http://localhost:8081"
+  enabled: true
+  ansible_url: "http://host.docker.internal:8082"
   ansible_token: "your-ansible-token-here"
   playbook: "rollback.yml"
 
