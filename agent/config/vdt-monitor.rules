@@ -1,0 +1,8 @@
+# VDT Out-of-band Deployment Monitor - Audit Rules
+# Copy file nay vao /etc/audit/rules.d/ va chay lenh: sudo augenrules --load
+
+# Giam sat Nginx config
+-w /etc/nginx/ -p wa -k vdt_monitor
+
+# Giam sat ma nguon Web
+-w /var/www/html/ -p wa -k vdt_monitor
