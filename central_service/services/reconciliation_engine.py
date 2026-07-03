@@ -42,32 +42,36 @@ class ReconciliationEngine:
         source_ip = audit_data.get("source_ip", "")
         file_path = audit_data.get("file_path", "")
 
-        is_trusted_ip = self.ip_checker.is_trusted(source_ip)
-        is_building = False
+        ip_trusted = self.ip_checker.is_trusted(source_ip)
         
+        jenkins_building = False
         if self.enable_crosscheck:
-            is_building = self.jenkins_client.is_build_running()
-        else:
-            is_building = True
+            jenkins_building = self.jenkins_client.is_build_running()
 
-        if is_building:
-            logger.info(f"Hợp lệ: Jenkins đang chạy deploy. Thao tác trên {file_path} (từ IP {source_ip}) được cho phép.")
+        if ip_trusted and jenkins_building:
+            logger.info(f"Hợp lệ: IP {source_ip} (Trusted) đang thao tác trên '{file_path}' khi Jenkins có job chạy.")
             return
 
-        # Neu khong building thi deu la vi pham
-        if is_trusted_ip:
-            logger.warning(f"VI PHẠM: IP {source_ip} (Trusted IP) cấu hình thủ công trái phép khi Jenkins không chạy deploy!")
-        else:
-            logger.error(f"VI PHẠM NGHIÊM TRỌNG: IP {source_ip} KHÔNG trusted đang cấu hình thủ công trái phép khi Jenkins không chạy deploy!")
-        
+        if ip_trusted and not jenkins_building:
+            logger.warning(f"CẢNH BÁO: IP {source_ip} (Trusted) thao tác trên '{file_path}' nhưng KHÔNG CÓ job Jenkins nào đang chạy.")
+            event["severity"] = "WARNING"
+            self.es_client.send_violation(event)
+            self.total_violations += 1
+            return
+
+        if not ip_trusted and jenkins_building:
+            logger.warning(f"CẢNH BÁO: IP {source_ip} (Untrusted) thao tác trên '{file_path}' nhưng Jenkins CÓ job đang chạy.")
+            event["severity"] = "WARNING"
+            self.es_client.send_violation(event)
+            self.total_violations += 1
+            return
+
+        logger.error(f"VI PHẠM NGHIÊM TRỌNG: IP {source_ip} (Untrusted) thao tác trái phép trên '{file_path}' khi Jenkins KHÔNG chạy!")
         event["severity"] = "HIGH"
-        
         self.es_client.send_violation(event)
         self.total_violations += 1
         
-        # Trigger tu dong sua loi
-        if event.get("severity") == "HIGH":
-            self.remediation_client.trigger(event)
+        self.remediation_client.trigger(event)
 
     def get_stats(self) -> dict:
         return {
