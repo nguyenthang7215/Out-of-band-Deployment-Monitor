@@ -1,0 +1,12 @@
+apiVersion: 1
+
+datasources:
+  - name: Elasticsearch
+    uid: elasticsearch-vdt
+    type: elasticsearch
+    access: proxy
+    url: http://elasticsearch:9200
+    database: "oob-monitor-violations"
+    jsonData:
+      timeField: "timestamp_iso"
+      esVersion: 8

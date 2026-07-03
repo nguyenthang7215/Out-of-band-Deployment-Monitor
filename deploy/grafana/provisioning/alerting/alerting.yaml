@@ -1,0 +1,74 @@
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: "VDT Security Webhook"
+    receivers:
+      - uid: "webhook_receiver_01"
+        type: webhook
+        settings:
+          url: "http://reconciliation:8080/api/v1/alerts" # Trỏ về Central Service (giả lập)
+          httpMethod: "POST"
+
+policies:
+  - orgId: 1
+    receiver: "VDT Security Webhook"
+    group_by: ['grafana_folder', 'alertname']
+
+groups:
+  - orgId: 1
+    name: "VDT Drift Alerts"
+    folder: "VDT Dashboards"
+    interval: 10s
+    rules:
+      - uid: "vdt_drift_alert_01"
+        title: "CRITICAL: Configuration Drift Detected!"
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: elasticsearch-vdt
+            model:
+              refId: A
+              timeField: timestamp_iso
+              bucketAggs:
+                - field: timestamp_iso
+                  id: "2"
+                  settings:
+                    interval: auto
+                    min_doc_count: "0"
+                    trimEdges: 0
+                  type: date_histogram
+              metrics:
+                - id: "1"
+                  type: count
+              query: "severity:\"HIGH\""
+          - refId: B
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: B
+              type: classic_conditions
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: ["A"]
+                  reducer:
+                    type: last
+                  type: query
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        annotations:
+          summary: "Cảnh báo: Phát hiện sự thay đổi cấu hình trái phép (Shadow Deployment)!"
+          description: "Hệ thống phát hiện có file bị thay đổi không nằm trong lịch trình của Jenkins."
+        labels:
+          severity: critical
