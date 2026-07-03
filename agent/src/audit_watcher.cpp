@@ -211,10 +211,7 @@ void AuditWatcher::flush_event(const std::string& audit_serial) {
         
         // Neu co it nhat 1 file bi thay doi -> Ban event
         if (!pe.files.empty() && callback && pe.is_vdt_monitor) {
-            std::string source_ip = "127.0.0.1"; // Default cho Cron/Local
-            if (pe.session_id != -1) {
-                source_ip = session_tracker.get_source_ip(pe.session_id);
-            }
+            std::string source_ip = session_tracker.get_source_ip(pe.session_id);
             
             std::string username = "unknown";
             struct passwd pwd;
