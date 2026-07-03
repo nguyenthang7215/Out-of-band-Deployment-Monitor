@@ -27,6 +27,7 @@ private:
     };
 
     struct PendingEvent {
+        bool is_vdt_monitor = false;
         int session_id = -1;
         std::string exe;
         std::string syscall_num;

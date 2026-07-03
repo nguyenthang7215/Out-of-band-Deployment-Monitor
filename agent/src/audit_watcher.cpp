@@ -188,7 +188,12 @@ void AuditWatcher::process_line(const std::string& line) {
         if (!syscall.empty()) {
             pending_events[audit_serial].syscall_num = syscall;
         }
-    } 
+
+        std::string key_str = extract_field(line, "key=");
+        if (key_str == "vdt_monitor") {
+            pending_events[audit_serial].is_vdt_monitor = true;
+        }
+    }
     else if (line.find("type=PATH") != std::string::npos) {
         std::string name = extract_field(line, "name=");
         std::string nametype = extract_field(line, "nametype=");
@@ -205,7 +210,7 @@ void AuditWatcher::flush_event(const std::string& audit_serial) {
         const PendingEvent& pe = it->second;
         
         // Neu co it nhat 1 file bi thay doi -> Ban event
-        if (!pe.files.empty() && callback) {
+        if (!pe.files.empty() && callback && pe.is_vdt_monitor) {
             std::string source_ip = "127.0.0.1"; // Default cho Cron/Local
             if (pe.session_id != -1) {
                 source_ip = session_tracker.get_source_ip(pe.session_id);
