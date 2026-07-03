@@ -7,14 +7,14 @@ void SessionTracker::process_line(const std::string& line) {
 }
 
 std::string SessionTracker::get_source_ip(int session_id) const {
-    if (session_id == -1) return "127.0.0.1";
+    if (session_id == -1) return "unknown"; // Fail-Secure: session ao (cron/internal) -> tu choi
     
     std::lock_guard<std::mutex> lock(mtx);
     auto it = session_map.find(session_id);
     if (it != session_map.end()) {
         return it->second;
     }
-    return "127.0.0.1"; // Mac dinh la localhost (Vd: cronjob)
+    return "unknown"; // Fail-Secure: khong tim thay session trong cache -> tu choi
 }
 
 void SessionTracker::parse_login_line(const std::string& line) {
