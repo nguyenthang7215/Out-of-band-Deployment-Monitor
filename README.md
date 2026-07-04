@@ -120,10 +120,10 @@ Toàn bộ Elasticsearch, Grafana, Jenkins và Central Service đã được c�
 cd deploy
 
 # Khởi động toàn bộ stack ở chế độ ngầm (Detached mode)
-docker-compose up -d
+docker compose up -d
 
 # Kiểm tra trạng thái các container
-docker-compose ps
+docker compose ps
 ```
 
 **Các dịch vụ sẽ khả dụng tại:**
