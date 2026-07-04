@@ -29,6 +29,14 @@ class ElasticsearchClient:
         violation_doc = event.copy()
         violation_doc["violation_time"] = datetime.now(timezone.utc).isoformat()
         violation_doc["severity"] = event.get("severity", "HIGH")
+        
+        # Day cac fields quan trong tu audit_data ra root level de Grafana doc duoc
+        audit_data = event.get("audit_data", {})
+        violation_doc["timestamp_iso"] = audit_data.get("timestamp_iso", violation_doc["violation_time"])
+        violation_doc["file_path"] = audit_data.get("file_path", "")
+        violation_doc["event_type"] = audit_data.get("event_type", "")
+        violation_doc["username"] = audit_data.get("username", "")
+        violation_doc["source_ip"] = audit_data.get("source_ip", "")
 
         try:
             # Ghi vao ES. Neu index chua ton tai, ES se tu dong tao (theo cau hinh mac dinh)
