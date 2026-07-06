@@ -245,7 +245,7 @@ Out-of-band-Deployment-Monitor/
 
 ---
 
-## Tiêu chí Đánh giá (E2E)
+## Tiêu chí Đánh giá
 
 Hệ thống được thiết kế và kiểm thử hướng tới việc đáp ứng các tiêu chí khắt khe của Đề bài:
 - ✅ **Giảm thiểu False Positive:** Xây dựng cơ chế kiểm tra chéo (Cross-check) IP và Jenkins state nhằm hạn chế tối đa cảnh báo nhầm khi Ansible đang deploy hợp lệ.
