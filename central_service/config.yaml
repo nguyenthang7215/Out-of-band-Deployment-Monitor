@@ -1,0 +1,25 @@
+trusted_ips:
+  - "10.0.0.5"
+
+jenkins:
+  base_url: "http://localhost:8080"
+  username: "admin"
+  api_token: "your-token-here"
+  job_name: "deploy-myapp"
+  enable_crosscheck: true
+  timeout_seconds: 5
+
+elasticsearch:
+  url: "http://localhost:9200"
+  index: "oob-monitor-violations"
+
+remediation:
+  enabled: true
+  ansible_url: "http://host.docker.internal:8082"
+  ansible_token: "your-ansible-token-here"
+  playbook: "rollback.yml"
+
+server:
+  host: "0.0.0.0"
+  port: 8999
+  log_level: "INFO"

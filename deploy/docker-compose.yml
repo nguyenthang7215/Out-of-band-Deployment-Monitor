@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+    container_name: vdt_elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - vdt_network
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: vdt_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/provisioning/alerting:/etc/grafana/provisioning/alerting
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - elasticsearch
+    networks:
+      - vdt_network
+
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: vdt_jenkins
+    user: root
+    ports:
+      - "8081:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    networks:
+      - vdt_network
+
+  reconciliation:
+    build: ../central_service
+    container_name: vdt_reconciliation
+    ports:
+      - "8080:8080"
+    restart: on-failure
+    environment:
+      - ES_URL=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - vdt_network
+    volumes:
+      - ../central_service/config.yaml:/app/config.yaml
+
+networks:
+  vdt_network:
+    driver: bridge
+
+volumes:
+  es_data:
+  jenkins_home:

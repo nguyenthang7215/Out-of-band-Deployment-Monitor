@@ -1,0 +1,13 @@
+agent_id: "agent-production-01"
+project_id: "VDT-Out-of-band-Deployment-Monitor"
+
+server:
+  central_url: "http://127.0.0.1:8999/api/v1/events"
+
+watch_paths:
+  - "/etc/nginx/"
+  - "/var/www/html/"
+
+log:
+  path: "/var/log/vdt-agent/agent.log"
+  level: "INFO"

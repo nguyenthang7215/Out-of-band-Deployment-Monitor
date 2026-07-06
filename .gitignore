@@ -1,3 +1,37 @@
-*.o
+# Build output
+build/
+cmake-build-*/
 *.exe
+*.o
+*.a
+
+# IDE
 .vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Dependencies (downloaded by FetchContent)
+_deps/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Docker
+docker-compose.override.yml
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Package output
+*.deb
+*.rpm
