@@ -42,8 +42,6 @@ void Logger::log(LogLevel level, const std::string &msg) {
     if(log_file.is_open()) { 
         log_file << log_line << std::endl;
     }
-
-    std::cout << log_line << std::endl; // Cho debug (khong qua can thiet)
 }
 
 std::string Logger::level_to_string(LogLevel level) const {
